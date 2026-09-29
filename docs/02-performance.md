@@ -14,13 +14,15 @@ lights, modelos 3D e o clima de terror do mod.
 
 ## Máquina
 
+Medido no **CachyOS** (rolling release baseado em Arch):
+
 | | |
 |---|---|
+| SO | **CachyOS**, kernel 7.2.8-1-cachyos |
+| Gráficos | Mesa 26.2.3, RADV, Vulkan 1.4.354 |
 | CPU | AMD Ryzen 5 5625U (6c/12t, Zen 3) |
 | GPU | AMD Radeon integrada — Vega 8, codinome **RENOIR** |
 | Memória | 15 GB, **compartilhada com a GPU** |
-| SO | CachyOS (Arch), kernel 7.2.8 |
-| Gráficos | Mesa 26.2.3, RADV, Vulkan 1.4.354 |
 | Sessão | Hyprland / Wayland (jogo via XWayland) |
 | Painel | 1920x1080 @ **60 Hz**, `scale=1.5` |
 | Wine | 11.18 (prefixo win64) |

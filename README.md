@@ -10,6 +10,28 @@ performance medido em GPU integrada.
 > `fivenightsatfreddys1doom-*.zip` comprado/baixado por conta própria, com a
 > pasta `game/` extraída.
 
+> ### Testado no CachyOS
+>
+> Tudo aqui foi testado e validado no **CachyOS** (rolling release baseado em
+> Arch), com Wayland/Hyprland:
+>
+> | | |
+> |---|---|
+> | SO | **CachyOS**, kernel 7.2.8-1-cachyos |
+> | Gráficos | Mesa 26.2.3 · **RADV** · Vulkan 1.4.354 |
+> | Wine | 11.18 (prefixo win64) |
+> | Sessão | Hyprland / Wayland (jogo via XWayland) |
+> | CPU | AMD Ryzen 5 5625U |
+> | GPU | AMD Radeon integrada (Vega 8, "RENOIR"), 15 GB compartilhados |
+> | Painel | 1920x1080 @ 60 Hz, `scale=1.5` |
+> | Jogo | FNAF Doom v4.1.1 · GZDoom 4.11.1 |
+>
+> O CachyOS é Arch-based e **não usa `apt`/`dpkg`**, então os comandos de
+> instalação do guia são para gerenciadores Arch (ou são dispensáveis — veja
+> [Requisitos](#requisitos)). O resto — Wine, Mesa/RADV, XWayland, MangoHud —
+> é igual em qualquer distribuição, e nada aqui depende de pacote específico
+> do CachyOS.
+
 ---
 
 ## Índice
@@ -56,12 +78,28 @@ script que monta o mesmo comando.
 
 ## Requisitos
 
-- Linux com **Wine 9+** (testado no Wine 11.18)
+- Linux com **Wine 9+** (testado no Wine 11.18, no CachyOS)
 - Driver **Mesa** com Vulkan (RADV para AMD, ANV para Intel) — o GZDoom 4.11
   usa Vulkan por padrão
 - O jogo já extraído em `~/Downloads/game` (ou aponte com `--dir`)
 
-Verifique sua Vulkan antes de começar:
+No **CachyOS**/Arch, o que costuma faltar numa instalação nova:
+
+```bash
+sudo pacman -S --needed wine vulkan-tools vulkan-radeon mangohud
+```
+
+| pacote | para quê |
+|---|---|
+| `wine` | rodar o `gzdoom.exe` |
+| `vulkan-radeon` | driver RADV da AMD (no Intel: `vulkan-intel`) |
+| `vulkan-tools` | `vulkaninfo`, usado pelo `diagnose.sh` |
+| `mangohud` | overlay e log de FPS para medir performance |
+
+Opcional: `lib32-vulkan-radeon` só se o seu Wine for 32 bits — este build é
+`PE32+`, então o prefixo `win64` não precisa dos libraries 32-bit.
+
+Verifique sua Vulkan antes de continuar:
 
 ```bash
 vulkaninfo --summary | grep -E 'deviceName|driverName'
@@ -307,15 +345,19 @@ fnaf-doom --dry-run
 
 ### Ambiente de teste
 
+Todos os números abaixo foram medidos no **CachyOS**, nesta máquina:
+
 | | |
 |---|---|
+| SO | **CachyOS**, kernel 7.2.8-1-cachyos (rolling, Arch-based) |
+| Gráficos | Mesa 26.2.3, RADV, Vulkan 1.4.354 |
 | CPU | AMD Ryzen 5 5625U |
 | GPU | AMD Radeon integrada (Vega 8, "RENOIR") |
 | RAM | 15 GB (GPU usa RAM compartilhada) |
-| SO | CachyOS, kernel 7.2, Mesa 26.2.3 |
-| Sessão | Hyprland / Wayland (XWayland) |
+| Sessão | Hyprland / Wayland (jogo via XWayland) |
 | Painel | 1920x1080 **@ 60 Hz**, `scale=1.5` |
 | Wine | 11.18 |
+| Jogo | FNAF Doom v4.1.1 (GZDoom 4.11.1) |
 
 ### Como foi medido
 
@@ -570,6 +612,7 @@ cp ~/Downloads/game/settings.ini.orig ~/Downloads/game/settings.ini
 - **Wine** — camada de compatibilidade
 - **Mesa/RADV** — drivers gráficos
 - **MangoHud** — overlay e log de FPS
+- **CachyOS** — sistema onde o guia foi escrito e todos os números medidos
 
 Este guia é um projeto pessoal e não tem vínculo oficial com os autores do jogo.
 Siga as regras de distribuição do FNAF Doom e do GZDoom.

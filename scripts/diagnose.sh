@@ -36,6 +36,16 @@ head_ "Sistema"
 [ -r /etc/os-release ] && ok "$(. /etc/os-release && echo "$PRETTY_NAME")" || warn "nao foi ler /etc/os-release"
 printf '       kernel: %s\n' "$(uname -r)"
 printf '       arch:   %s\n' "$(uname -m)"
+# O guia foi escrito e medido no CachyOS. Avisar quando rodar em outro SO,
+# porque os numeros de performance do README nao se aplicam diretamente.
+OSID="$(. /etc/os-release 2>/dev/null && echo "${ID:-desconhecido}")"
+case "$OSID" in
+    cachyos) ok "SO de referencia do guia" ;;
+    arch|manjaro|endeavouros|garuda)
+        warn "$OSID e Arch-based como o CachyOS; pacotes via pacman, demais passos iguais" ;;
+    *)
+        warn "SO diferente do CachyOS (referencia do guia) — confira o passo a passo de dependencias" ;;
+esac
 
 # ---------------------------------------------------------------- vulkan
 head_ "Graficos / Vulkan"
