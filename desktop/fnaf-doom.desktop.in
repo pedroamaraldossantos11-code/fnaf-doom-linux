@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=FNAF Doom
+GenericName=Doom horror
+Comment=Five Nights at Freddy's no Doom (GZDoom via Wine)
+Exec=REPLACE_ME
+Icon=fnaf-doom
+Terminal=false
+Categories=Game;ActionGame;
+StartupNotify=true
+StartupWMClass=gzdoom.exe
+Keywords=doom;fnaf;horror;gzdoom;wine;

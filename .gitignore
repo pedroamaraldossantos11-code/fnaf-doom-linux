@@ -1,0 +1,35 @@
+# Arquivos do jogo — NUNCA versionar.
+# O FNAF.pk3 tem ~1 GB e e conteudo licenciado de terceiros.
+game/
+FNAFDoom.ipk3
+FNAF.pk3
+FNAF*.wad
+JF.pk3
+gzdoom.exe
+gzdoom.pk3
+FDLauncher.exe
+install.dat
+settings.ini
+settings.ini.orig
+settings-*.ini
+
+# Configuracao local / Builds
+*.log
+*.bak
+*.orig
+*.tmp
+*.swp
+*~
+
+# Python (do gerador de icone)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editores / SO
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

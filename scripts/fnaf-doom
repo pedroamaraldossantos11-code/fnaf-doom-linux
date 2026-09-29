@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# fnaf-doom — launcher do FNAF Doom (GZDoom) no Linux via Wine.
+#
+# O FNAF Doom e distribuido como build Windows (GZDoom + FDLauncher.exe).
+# Este script substitui o FDLauncher: le o install.dat de cada installment,
+# monta a mesma linha de comando que o launcher original usaria e roda o
+# gzdoom.exe dentro de um prefixo Wine dedicado.
+#
+# Uso:
+#   fnaf-doom                     abre o jogo em tela cheia
+#   fnaf-doom --fd 2              usa o FNAF 2 (padrao: 1)
+#   fnaf-doom --lowpoly           liga os arquivos marcados |LOWPOLY no install.dat
+#   fnaf-doom --materials         liga os arquivos marcados |MATERIALS no install.dat
+#   fnaf-doom --res 1920x1080     resolucao interna (default: a do settings.ini)
+#   fnaf-doom --opengl            usa OpenGL em vez de Vulkan
+#   fnaf-doom --vsync / --novsync liga/desliga vsync
+#   fnaf-doom --ssao on|off       SSAO (on = melhor visual, ~44 fps em 720p)
+#   fnaf-doom --lang pt_BR|en_US  idioma (padrao: pt_BR.UTF-8)
+#   fnaf-doom --mangohud          overlay de FPS
+#   fnaf-doom --log               log em /tmp/fnaf-doom.log
+#   fnaf-doom -- -warp 1          argumentos extras vao direto ao GZDoom
+#
+# Variaveis de ambiente equivalentes:
+#   FNAF_DOOM_DIR  FNAF_DOOM_PREFIX  FNAF_BACKEND  FNAF_LANG  FNAF_FD
+
+set -euo pipefail
+
+GAMEDIR="${FNAF_DOOM_DIR:-$HOME/Downloads/game}"
+PREFIX="${FNAF_DOOM_PREFIX:-${XDG_DATA_HOME:-$HOME/.local/share}/wineprefixes/fnafdoom}"
+BACKEND="${FNAF_BACKEND:-1}"          # GZDoom: 1 = Vulkan, 2 = OpenGL
+FD="${FNAF_FD:-1}"
+LANG_OVERRIDE="${FNAF_LANG:-pt_BR.UTF-8}"
+MANGOHUD=0
+LOGFILE=""
+LOWPOLY=""
+MATERIALS=""
+DRYRUN=""
+EXTRA=()
+
+die() { printf '\033[31mfnaf-doom: %s\033[0m\n' "$*" >&2; exit 1; }
+
+while (($#)); do
+	case "$1" in
+		--fd)         FD="$2"; shift 2 ;;
+		--fd=*)       FD="${1#*=}"; shift ;;
+		--lowpoly)    LOWPOLY=1; shift ;;
+		--materials)  MATERIALS=1; shift ;;
+		--res)        EXTRA+=("+vid_scalemode 5" "+vid_scale_customwidth ${2%x*}" "+vid_scale_customheight ${2#*x}"); shift 2 ;;
+		--res=*)      EXTRA+=("+vid_scalemode 5" "+vid_scale_customwidth ${1#*=}" "+vid_scale_customheight ${1#*=}"); shift ;;
+		--opengl)     BACKEND=2; shift ;;
+		--vulkan)     BACKEND=1; shift ;;
+		--vsync)      EXTRA+=("+vid_vsync 1"); shift ;;
+		--novsync)    EXTRA+=("+vid_vsync 0"); shift ;;
+		--ssao)       EXTRA+=("+gl_ssao $([[ ${2,,} == on ]] && echo 1 || echo 0)"); shift 2 ;;
+		--lang)       LANG_OVERRIDE="$2"; shift 2 ;;
+		--mangohud)   MANGOHUD=1; shift ;;
+		--log)        LOGFILE=/tmp/fnaf-doom.log; shift ;;
+		--dir)        GAMEDIR="$2"; shift 2 ;;
+		--prefix)     PREFIX="$2"; shift 2 ;;
+		--dry-run)    DRYRUN=1; shift ;;
+		-h|--help)    sed -n '3,25p' "$0" | sed 's/^#\{1\} \{0,1\}//'; exit 0 ;;
+		--)           shift; EXTRA+=("$@"); break ;;
+		*)            EXTRA+=("$1"); shift ;;
+	esac
+done
+
+# --- localizacao do jogo -----------------------------------------------------
+[[ -d $GAMEDIR ]]  || die "pasta do jogo nao encontrada: $GAMEDIR (use --dir)"
+[[ -f $GAMEDIR/gzdoom.exe ]] || die "gzdoom.exe nao encontrado em $GAMEDIR"
+
+FDDIR="$GAMEDIR/wads/FD$FD"
+[[ -d $FDDIR ]] || die "wads/FD$FD nao encontrado (use --fd N; disponiveis: $(cd "$GAMEDIR/wads" 2>/dev/null && ls -d FD* 2>/dev/null | tr '\n' ' '))"
+
+IWAD="FNAFDoom.ipk3"
+[[ -f $GAMEDIR/$IWAD ]] || die "IWAD $IWAD nao encontrado em $GAMEDIR"
+
+# --- monta a lista de -file a partir do install.dat ---------------------------
+# Formato (o FDLauncher le exatamente isso):
+#   version=4.1.1
+#   files=
+#   [
+#       FNAF.wad,
+#       FNAF.pk3,
+#       FNAF_LowPoly.pk3|LOWPOLY,
+#   ]
+FILES=()
+if [[ -f $FDDIR/install.dat ]]; then
+	while IFS= read -r raw; do
+		raw="${raw//[[:space:]]/}"
+		[[ -z $raw || $raw == files=* || $raw == "[" || $raw == "]," || $raw == "]" ]] && continue
+		[[ $raw == *, ]] && raw="${raw%,}"
+		name="${raw%%|*}"
+		flag="${raw#*|}"; [[ $flag == "$raw" ]] && flag=""
+		case "$flag" in
+			LOWPOLY)   [[ -n $LOWPOLY ]] && FILES+=("$FDDIR/$name") ;;
+			MATERIALS) [[ -n $MATERIALS ]] && FILES+=("$FDDIR/$name") ;;
+			*)         FILES+=("$FDDIR/$name") ;;
+		esac
+	done < <(sed -n '/^files=/,/]/p' "$FDDIR/install.dat")
+fi
+((${#FILES[@]})) || FILES=("$FDDIR/FNAF.pk3")
+
+# wads globais (o FDLauncher passa wads/Global/* junto)
+if [[ -d $GAMEDIR/wads/Global ]]; then
+	while IFS= read -r f; do FILES+=("wads/Global/$f"); done \
+		< <(cd "$GAMEDIR/wads/Global" && ls -1 2>/dev/null)
+fi
+
+# --- executa -----------------------------------------------------------------
+cd "$GAMEDIR"
+export WINEPREFIX="$PREFIX"
+
+ARGS=(
+	-config settings.ini
+	-iwad "$IWAD"
+	-file "${FILES[@]}"
+	"+vid_preferbackend $BACKEND"
+)
+[[ -n "$LOGFILE" ]] && ARGS+=("+logfile $LOGFILE")
+
+ENV_ARGS=()
+((MANGOHUD)) && ENV_ARGS=(MANGOHUD=1 MANGOHUD_DLSYM=1)
+
+printf 'FNAF Doom %s | dir=%s | backend=%s | prefix=%s\n' \
+	"$FD" "$GAMEDIR" "$([[ $BACKEND == 1 ]] && echo Vulkan || echo OpenGL)" "$PREFIX"
+
+if [[ -n $DRYRUN ]]; then
+	printf 'exec env LANG=%s LC_ALL=%s \\\n' "$LANG_OVERRIDE" "$LANG_OVERRIDE"
+	printf '  wine gzdoom.exe'
+	printf " '%s'" "${ARGS[@]}" ${EXTRA[@]+"${EXTRA[@]}"}
+	printf '\n'
+	exit 0
+fi
+
+exec env LANG="$LANG_OVERRIDE" LC_ALL="$LANG_OVERRIDE" \
+	${ENV_ARGS[@]+"${ENV_ARGS[@]}"} \
+	wine gzdoom.exe "${ARGS[@]}" ${EXTRA[@]+"${EXTRA[@]}"}

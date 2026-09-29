@@ -1,0 +1,36 @@
+MIT License
+
+Copyright (c) 2026 Pedro Amaral dos Santos
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Esta licença cobre APENAS os scripts e a documentação deste repositório
+(scripts/, desktop/make-icon.py e os arquivos .md).
+
+Ela NÃO cobre, e não se aplica a:
+  - FNAF Doom / Five Nights at Freddy's, de Scott Cawthon e Zeekerss
+  - GZDoom e ZDoom, de Christoph Oelckers e o time do GZDoom
+  - Wine, da WineHQ
+  - Mesa, AMD, Intel e demais projetos de drivers
+  - o icone gerado em desktop/fnaf-doom.png, que e derivado do logo
+    distribuido dentro de FNAFDoom.ipk3 (propriedade de seus autores)
+Nenhum arquivo do jogo e incluido neste repositorio. O usuario precisa ter o
+proprio FNAFDoom.ipk3, FNAF.pk3 e wads/idalmente obtidos de forma licita.
